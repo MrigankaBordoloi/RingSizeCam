@@ -1,0 +1,59 @@
+import { describe, it, expect } from 'vitest';
+import { circumferenceToSize, DEFAULT_US_SIZE_TABLE } from '../sizing.js';
+
+describe('circumferenceToSize', () => {
+  it('returns exact size at a table anchor point (US 7 = 54.51mm)', () => {
+    const result = circumferenceToSize(54.51, [54.51, 54.51]);
+    expect(result.value).toBeCloseTo(7.0, 2);
+    expect(result.confidenceInterval[0]).toBeCloseTo(7.0, 2);
+    expect(result.confidenceInterval[1]).toBeCloseTo(7.0, 2);
+  });
+
+  it('interpolates between anchor points', () => {
+    // Midpoint between US 7 (54.51mm) and US 7.5 (55.76mm)
+    const midCirc = (54.51 + 55.76) / 2;
+    const result = circumferenceToSize(midCirc, [midCirc, midCirc]);
+    expect(result.value).toBeGreaterThan(7.0);
+    expect(result.value).toBeLessThan(7.5);
+    expect(result.value).toBeCloseTo(7.25, 1);
+  });
+
+  it('round-trips at every table anchor point', () => {
+    for (const entry of DEFAULT_US_SIZE_TABLE) {
+      const result = circumferenceToSize(
+        entry.circumferenceMm,
+        [entry.circumferenceMm, entry.circumferenceMm],
+      );
+      expect(result.value).toBeCloseTo(entry.size, 2);
+    }
+  });
+
+  it('extrapolates below table minimum', () => {
+    const result = circumferenceToSize(40.0, [40.0, 40.0]);
+    // Should extrapolate below size 3
+    expect(result.value).toBeLessThan(3);
+  });
+
+  it('extrapolates above table maximum', () => {
+    const result = circumferenceToSize(80.0, [80.0, 80.0]);
+    // Should extrapolate above size 15
+    expect(result.value).toBeGreaterThan(15);
+  });
+
+  it('produces a confidence interval spanning the circumference range', () => {
+    // 54.51mm is US7, 55.76mm is US7.5
+    const result = circumferenceToSize(55.0, [54.51, 55.76]);
+    expect(result.confidenceInterval[0]).toBeCloseTo(7.0, 1);
+    expect(result.confidenceInterval[1]).toBeCloseTo(7.5, 1);
+    expect(result.value).toBeGreaterThan(result.confidenceInterval[0]);
+    expect(result.value).toBeLessThan(result.confidenceInterval[1]);
+  });
+
+  it('returns a MeasurementResult, never a bare number', () => {
+    const result = circumferenceToSize(54.51, [54.0, 55.0]);
+    expect(result).toHaveProperty('value');
+    expect(result).toHaveProperty('confidenceInterval');
+    expect(Array.isArray(result.confidenceInterval)).toBe(true);
+    expect(result.confidenceInterval).toHaveLength(2);
+  });
+});

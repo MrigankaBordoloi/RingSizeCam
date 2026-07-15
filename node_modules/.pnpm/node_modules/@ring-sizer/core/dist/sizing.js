@@ -1,0 +1,95 @@
+// ──────────────────────────────────────────────────────────────
+// sizing.ts — Circumference → ring size table lookup with
+// linear interpolation. Table is swappable config.
+// ──────────────────────────────────────────────────────────────
+/**
+ * Standard US ring-size chart.
+ * Source: ISO 8653 / common US jeweler reference.
+ * Circumferences in mm.
+ */
+export const DEFAULT_US_SIZE_TABLE = [
+    { label: '3', size: 3, circumferenceMm: 44.14 },
+    { label: '3.5', size: 3.5, circumferenceMm: 45.40 },
+    { label: '4', size: 4, circumferenceMm: 46.68 },
+    { label: '4.5', size: 4.5, circumferenceMm: 47.97 },
+    { label: '5', size: 5, circumferenceMm: 49.32 },
+    { label: '5.5', size: 5.5, circumferenceMm: 50.58 },
+    { label: '6', size: 6, circumferenceMm: 51.87 },
+    { label: '6.5', size: 6.5, circumferenceMm: 53.16 },
+    { label: '7', size: 7, circumferenceMm: 54.51 },
+    { label: '7.5', size: 7.5, circumferenceMm: 55.76 },
+    { label: '8', size: 8, circumferenceMm: 57.15 },
+    { label: '8.5', size: 8.5, circumferenceMm: 58.42 },
+    { label: '9', size: 9, circumferenceMm: 59.69 },
+    { label: '9.5', size: 9.5, circumferenceMm: 60.98 },
+    { label: '10', size: 10, circumferenceMm: 62.33 },
+    { label: '10.5', size: 10.5, circumferenceMm: 63.53 },
+    { label: '11', size: 11, circumferenceMm: 64.97 },
+    { label: '11.5', size: 11.5, circumferenceMm: 66.22 },
+    { label: '12', size: 12, circumferenceMm: 67.51 },
+    { label: '12.5', size: 12.5, circumferenceMm: 68.76 },
+    { label: '13', size: 13, circumferenceMm: 70.10 },
+    { label: '13.5', size: 13.5, circumferenceMm: 71.33 },
+    { label: '14', size: 14, circumferenceMm: 72.57 },
+    { label: '14.5', size: 14.5, circumferenceMm: 73.82 },
+    { label: '15', size: 15, circumferenceMm: 75.06 },
+];
+/**
+ * Map a circumference (mm) to a ring size using linear interpolation.
+ *
+ * @param circumferenceMm Measured circumference in mm.
+ * @param circumferenceRange [lo, hi] circumference range for CI computation.
+ * @param table Ring-size lookup table (defaults to US chart).
+ * @returns MeasurementResult with interpolated size and confidence interval.
+ */
+export function circumferenceToSize(circumferenceMm, circumferenceRange, table = DEFAULT_US_SIZE_TABLE) {
+    const value = interpolateSize(circumferenceMm, table);
+    const lo = interpolateSize(circumferenceRange[0], table);
+    const hi = interpolateSize(circumferenceRange[1], table);
+    return {
+        value,
+        confidenceInterval: [lo, hi],
+    };
+}
+/**
+ * Interpolate a ring size from circumference using the lookup table.
+ * Clamps to the table range at the boundaries.
+ */
+function interpolateSize(circumferenceMm, table) {
+    if (table.length === 0) {
+        throw new Error('Size table is empty');
+    }
+    const first = table[0];
+    const last = table[table.length - 1];
+    // Below table minimum — extrapolate linearly from first two entries
+    if (circumferenceMm <= first.circumferenceMm) {
+        if (table.length < 2)
+            return first.size;
+        const second = table[1];
+        const slope = (second.size - first.size) /
+            (second.circumferenceMm - first.circumferenceMm);
+        return first.size + slope * (circumferenceMm - first.circumferenceMm);
+    }
+    // Above table maximum — extrapolate linearly from last two entries
+    if (circumferenceMm >= last.circumferenceMm) {
+        if (table.length < 2)
+            return last.size;
+        const secondLast = table[table.length - 2];
+        const slope = (last.size - secondLast.size) /
+            (last.circumferenceMm - secondLast.circumferenceMm);
+        return last.size + slope * (circumferenceMm - last.circumferenceMm);
+    }
+    // Find bracketing entries and interpolate
+    for (let i = 0; i < table.length - 1; i++) {
+        const lo = table[i];
+        const hi = table[i + 1];
+        if (circumferenceMm >= lo.circumferenceMm && circumferenceMm <= hi.circumferenceMm) {
+            const t = (circumferenceMm - lo.circumferenceMm) /
+                (hi.circumferenceMm - lo.circumferenceMm);
+            return lo.size + t * (hi.size - lo.size);
+        }
+    }
+    // Should never reach here
+    return last.size;
+}
+//# sourceMappingURL=sizing.js.map

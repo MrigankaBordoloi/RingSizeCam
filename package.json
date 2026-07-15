@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "dev": "pnpm --filter @ring-sizer/web-demo dev"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.1",
+    "typescript": "^5.8.3"
+  }
+}
