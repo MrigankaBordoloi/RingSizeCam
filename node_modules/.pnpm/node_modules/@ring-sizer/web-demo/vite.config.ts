@@ -5,7 +5,7 @@ export default defineConfig({
   root: '.',
   resolve: {
     alias: {
-      '@ring-sizer/core': path.resolve(__dirname, '../../packages/core/src'),
+      '@ring-sizer/web-component': path.resolve(__dirname, '../../packages/web-component/src'),
     },
   },
   server: {

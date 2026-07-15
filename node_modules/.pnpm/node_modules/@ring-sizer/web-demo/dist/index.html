@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ring Sizer — Debug Demo</title>
+  <title>Ring Sizer — Web Component Demo</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -11,288 +11,63 @@
       background: #0a0a0f;
       color: #e0e0e0;
       font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-      overflow: hidden;
-      height: 100vh;
-      width: 100vw;
-    }
-
-    #app {
-      position: relative;
-      width: 100%;
-      height: 100%;
+      min-height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* Camera feed + overlays stack */
-    #camera-container {
-      position: relative;
-      max-width: 100%;
-      max-height: 100%;
-    }
-
-    #camera-feed {
-      display: block;
-      max-width: 100vw;
-      max-height: 100vh;
-      background: #111;
-    }
-
-    #overlay-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-
-    /* State banner */
-    #state-banner {
-      position: absolute;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 8px 24px;
-      border-radius: 24px;
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      z-index: 10;
-      backdrop-filter: blur(8px);
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.15);
-      transition: background 0.3s, color 0.3s;
-    }
-
-    /* Progress bar (SWEEPING state) */
-    #progress-container {
-      position: absolute;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 280px;
-      height: 6px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 3px;
-      overflow: hidden;
-      z-index: 10;
-      display: none;
-    }
-
-    #progress-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #4fc3f7, #00e676);
-      border-radius: 3px;
-      transition: width 0.15s;
-    }
-
-    #progress-label {
-      position: absolute;
-      bottom: 92px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 12px;
-      color: rgba(255,255,255,0.6);
-      z-index: 10;
-      display: none;
-    }
-
-    /* Result overlay */
-    #result-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: none;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      background: rgba(10, 10, 15, 0.92);
-      backdrop-filter: blur(12px);
-      z-index: 20;
+      gap: 16px;
+      padding: 24px;
     }
 
-    #result-overlay.visible {
-      display: flex;
+    ring-sizer {
+      width: 100%;
+      max-width: 720px;
+      height: 70vh;
+      border-radius: 12px;
+      overflow: hidden;
     }
 
-    .result-size {
-      font-size: 72px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #4fc3f7, #00e676);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    #event-log-panel {
+      width: 100%;
+      max-width: 720px;
     }
 
-    .result-label {
-      font-size: 16px;
-      color: rgba(255,255,255,0.5);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .result-ci {
-      font-size: 18px;
-      color: rgba(255,255,255,0.7);
-      margin-top: 16px;
-    }
-
-    .result-retry-msg {
-      font-size: 16px;
-      color: #ff7043;
-      margin-top: 16px;
-      display: none;
-    }
-
-    #remeasure-btn {
-      margin-top: 32px;
-      padding: 12px 36px;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #4fc3f7, #00e676);
-      color: #0a0a0f;
-      font-size: 16px;
-      font-weight: 600;
+    #toggle-mount-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      color: #e0e0e0;
       cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-      pointer-events: auto;
+      margin-bottom: 8px;
     }
 
-    #remeasure-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 20px rgba(79, 195, 247, 0.3);
+    #toggle-mount-btn:hover {
+      background: rgba(255,255,255,0.1);
     }
 
-    /* Debug HUD */
-    #debug-hud {
-      position: absolute;
-      top: 48px;
-      right: 8px;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(6px);
+    #event-log {
+      background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 8px;
-      padding: 10px 14px;
+      padding: 12px;
       font-family: 'Consolas', 'Fira Code', monospace;
-      font-size: 11px;
-      line-height: 1.6;
-      color: #ccc;
-      z-index: 15;
-      min-width: 220px;
-      display: none;
-      pointer-events: none;
-    }
-
-    #debug-hud.visible { display: block; }
-
-    .hud-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .hud-label { color: #888; }
-    .hud-val { color: #4fc3f7; font-weight: 600; }
-    .hud-pass { color: #00e676; }
-    .hud-fail { color: #ff5252; }
-    .hud-section {
-      margin-top: 6px;
-      padding-top: 6px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      font-weight: 600;
-      color: #aaa;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    /* HUD toggle hint */
-    #hud-hint {
-      position: absolute;
-      bottom: 16px;
-      right: 16px;
-      font-size: 11px;
-      color: rgba(255,255,255,0.3);
-      z-index: 10;
-    }
-
-    /* Loading spinner */
-    #loading {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #0a0a0f;
-      z-index: 30;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(255,255,255,0.1);
-      border-top-color: #4fc3f7;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .loading-text {
-      margin-top: 16px;
-      color: rgba(255,255,255,0.5);
-      font-size: 14px;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-dAl7_WYl.js"></script>
+  <script type="module" crossorigin src="/assets/index-BfOErA8x.js"></script>
 </head>
 <body>
-  <div id="app">
-    <!-- Loading screen -->
-    <div id="loading">
-      <div class="spinner"></div>
-      <div class="loading-text" id="loading-text">Initializing camera…</div>
-    </div>
+  <!-- This is the entire embed: one custom element, configured via attributes. -->
+  <ring-sizer api-key="demo-key" locale="en-US" size-chart-id="us-default"></ring-sizer>
 
-    <!-- Camera + overlays -->
-    <div id="camera-container">
-      <video id="camera-feed" autoplay playsinline muted></video>
-      <canvas id="overlay-canvas"></canvas>
-    </div>
-
-    <!-- State banner -->
-    <div id="state-banner">Initializing…</div>
-
-    <!-- Progress (SWEEPING) -->
-    <div id="progress-label">Gated frames</div>
-    <div id="progress-container">
-      <div id="progress-bar"></div>
-    </div>
-
-    <!-- Debug HUD -->
-    <div id="debug-hud"></div>
-
-    <!-- Result overlay -->
-    <div id="result-overlay">
-      <div class="result-size" id="result-size">—</div>
-      <div class="result-label">US Ring Size</div>
-      <div class="result-ci" id="result-ci">CI: —</div>
-      <div class="result-retry-msg" id="result-retry-msg">
-        Confidence interval too wide — please re-measure with steadier hand
-      </div>
-      <button id="remeasure-btn">Re-measure</button>
-    </div>
-
-    <!-- HUD toggle hint -->
-    <div id="hud-hint">Press D to toggle debug HUD</div>
+  <div id="event-log-panel">
+    <button id="toggle-mount-btn">Unmount ring-sizer</button>
+    <pre id="event-log">Waiting for events…</pre>
   </div>
 
-  <!-- OpenCV.js from official CDN -->
-  <script async src="https://docs.opencv.org/4.10.0/opencv.js" id="opencv-script"></script>
 </body>
 </html>

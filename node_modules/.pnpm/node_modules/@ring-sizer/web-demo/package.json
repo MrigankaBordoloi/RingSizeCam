@@ -9,8 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mediapipe/tasks-vision": "^0.10.24",
-    "@ring-sizer/core": "workspace:*"
+    "@ring-sizer/web-component": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

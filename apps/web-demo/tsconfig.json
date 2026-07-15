@@ -7,6 +7,6 @@
   },
   "include": ["src/**/*.ts"],
   "references": [
-    { "path": "../../packages/core" }
+    { "path": "../../packages/web-component" }
   ]
 }

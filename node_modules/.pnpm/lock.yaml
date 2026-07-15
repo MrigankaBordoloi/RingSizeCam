@@ -17,12 +17,9 @@ importers:
 
   apps/web-demo:
     dependencies:
-      '@mediapipe/tasks-vision':
-        specifier: ^0.10.24
-        version: 0.10.35
-      '@ring-sizer/core':
+      '@ring-sizer/web-component':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../packages/web-component
     devDependencies:
       typescript:
         specifier: ^5.8.3
@@ -32,6 +29,22 @@ importers:
         version: 6.4.3
 
   packages/core:
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.1
+        version: 3.2.7
+
+  packages/web-component:
+    dependencies:
+      '@mediapipe/tasks-vision':
+        specifier: ^0.10.24
+        version: 0.10.35
+      '@ring-sizer/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       typescript:
         specifier: ^5.8.3
